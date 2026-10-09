@@ -169,13 +169,13 @@ Create comprehensive TypeScript types based on API responses. Mirror all enums f
 - [ ] Handle payment callback
 
 ### Phase 5: Owner Dashboard
-- [ ] Owner dashboard with analytics + recharts
-- [ ] Property management (CRUD with next/image)
-- [ ] Variants & Flats management
-- [ ] Applications review (approve/reject)
-- [ ] Leases management (terminate)
-- [ ] Tenants list
-- [ ] Owner profile/application
+  - [x] Owner dashboard with analytics + recharts
+  - [x] Property management (create/list/detail with next/image)
+  - [x] Variants & Flats management
+  - [x] Applications review (approve/reject)
+  - [x] Leases management (terminate)
+  - [x] Tenants list
+  - [x] Owner profile/application
 
 ### Phase 6: Admin Dashboard
 - [ ] Admin dashboard with platform analytics using recharts
