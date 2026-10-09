@@ -29,8 +29,9 @@ async function handleRequest(req: NextRequest, method: string) {
     ? await res.json()
     : await res.text();
   const response = NextResponse.json(data, { status: res.status });
-  const cookies = res.headers.getSetCookie();
-  cookies.forEach((cookie) => response.headers.append("set-cookie", cookie));
+  for (const cookie of res.headers.getSetCookie()) {
+    response.headers.append("set-cookie", cookie);
+  }
   return response;
 }
 
