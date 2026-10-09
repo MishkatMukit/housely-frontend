@@ -1,6 +1,12 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { publicFetch } from "@/lib/api/server";
-import type { ApiResponse, Paginated, Property, Variant } from "@/types/api";
+import type {
+  ApiResponse,
+  Flat,
+  Paginated,
+  Property,
+  Variant,
+} from "@/types/api";
 
 export interface Listing {
   id: string;
@@ -118,6 +124,40 @@ export const fallbackListings: Listing[] = [
   },
 ];
 
+async function enrichProperty(property: Property): Promise<Listing> {
+  const [variantsRes, vacancyRes] = await Promise.all([
+    publicFetch<ApiResponse<Variant[]>>(`/api/variants/${property.id}`),
+    publicFetch<ApiResponse<{ available: number }>>(
+      `/api/properties/vacancy/${property.id}`,
+    ),
+  ]);
+
+  const variants = variantsRes.body.data ?? [];
+  const rents = variants
+    .map((variant) => Number(variant.rentAmount))
+    .filter((value) => Number.isFinite(value));
+  const cheapest =
+    rents.length > 0 ? variants[rents.indexOf(Math.min(...rents))] : undefined;
+
+  return {
+    id: property.id,
+    title: property.title,
+    locality: property.address,
+    city: property.city,
+    district: property.district,
+    flats: property._count?.flats ?? property.totalFlats ?? 0,
+    available: vacancyRes.body.data?.available ?? 0,
+    fromRent: cheapest ? Number(cheapest.rentAmount) : null,
+    unit: cheapest?.name ?? null,
+    bedrooms: cheapest?.bedrooms ?? null,
+    bathrooms: cheapest?.bathrooms ?? null,
+    image: property.images?.[0]?.url ?? null,
+    ownerName:
+      property.owner?.user?.name ?? property.companyName ?? "Housely owner",
+    reference: `REF-${property.id.slice(0, 4).toUpperCase()}`,
+  } satisfies Listing;
+}
+
 export async function getListings(limit = 6): Promise<Listing[]> {
   "use cache";
   cacheLife("hours");
@@ -130,51 +170,122 @@ export async function getListings(limit = 6): Promise<Listing[]> {
     const rows = list.body.data?.data;
     if (!list.ok || !rows?.length) return fallbackListings.slice(0, limit);
 
-    const enriched = await Promise.all(
-      rows.slice(0, limit).map(async (property) => {
-        const [variantsRes, vacancyRes] = await Promise.all([
-          publicFetch<ApiResponse<Variant[]>>(`/api/variants/${property.id}`),
-          publicFetch<ApiResponse<{ available: number }>>(
-            `/api/properties/vacancy/${property.id}`,
-          ),
-        ]);
-
-        const variants = variantsRes.body.data ?? [];
-        const rents = variants
-          .map((variant) => Number(variant.rentAmount))
-          .filter((value) => Number.isFinite(value));
-        const cheapest =
-          rents.length > 0
-            ? variants[rents.indexOf(Math.min(...rents))]
-            : undefined;
-
-        const flats = property._count?.flats ?? property.totalFlats ?? 0;
-
-        return {
-          id: property.id,
-          title: property.title,
-          locality: property.address,
-          city: property.city,
-          district: property.district,
-          flats,
-          available: vacancyRes.body.data?.available ?? 0,
-          fromRent: cheapest ? Number(cheapest.rentAmount) : null,
-          unit: cheapest?.name ?? null,
-          bedrooms: cheapest?.bedrooms ?? null,
-          bathrooms: cheapest?.bathrooms ?? null,
-          image: property.images?.[0]?.url ?? null,
-          ownerName:
-            property.owner?.user?.name ??
-            property.companyName ??
-            "Housely owner",
-          reference: `REF-${property.id.slice(0, 4).toUpperCase()}`,
-        } satisfies Listing;
-      }),
-    );
-
-    return enriched;
+    return await Promise.all(rows.slice(0, limit).map(enrichProperty));
   } catch {
     return fallbackListings.slice(0, limit);
+  }
+}
+
+export interface PropertyFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  city?: string;
+  district?: string;
+}
+
+export interface ListingPage {
+  listings: Listing[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+function fallbackPage(page: number, limit: number): ListingPage {
+  return {
+    listings: fallbackListings.slice((page - 1) * limit, page * limit),
+    total: fallbackListings.length,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(fallbackListings.length / limit)),
+  };
+}
+
+export async function getPropertyPage(
+  filters: PropertyFilters = {},
+): Promise<ListingPage> {
+  const page = Math.max(1, filters.page ?? 1);
+  const limit = Math.min(100, Math.max(1, filters.limit ?? 9));
+
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (filters.search) params.set("search", filters.search);
+  if (filters.city) params.set("city", filters.city);
+  if (filters.district) params.set("district", filters.district);
+
+  try {
+    const res = await publicFetch<ApiResponse<Paginated<Property>>>(
+      `/api/properties/?${params.toString()}`,
+    );
+    const paginated = res.body.data;
+    if (!res.ok || !paginated) return fallbackPage(page, limit);
+
+    const listings = await Promise.all(
+      (paginated.data ?? []).map(enrichProperty),
+    );
+
+    return {
+      listings,
+      total: paginated.total ?? listings.length,
+      page: paginated.page ?? page,
+      limit: paginated.limit ?? limit,
+      totalPages: paginated.totalPages ?? 1,
+    };
+  } catch {
+    return fallbackPage(page, limit);
+  }
+}
+
+export interface PropertyDetail {
+  property: Property;
+  variants: Variant[];
+  available: number;
+}
+
+export async function getPropertyDetail(
+  id: string,
+): Promise<PropertyDetail | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("properties", `property-${id}`);
+
+  try {
+    const [propertyRes, variantsRes, vacancyRes] = await Promise.all([
+      publicFetch<ApiResponse<Property>>(`/api/properties/${id}`),
+      publicFetch<ApiResponse<Variant[]>>(`/api/variants/${id}`),
+      publicFetch<ApiResponse<{ available: number }>>(
+        `/api/properties/vacancy/${id}`,
+      ),
+    ]);
+
+    if (!propertyRes.ok || !propertyRes.body.data) return null;
+
+    return {
+      property: propertyRes.body.data,
+      variants: variantsRes.ok ? (variantsRes.body.data ?? []) : [],
+      available: vacancyRes.body.data?.available ?? 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getPropertyFlats(propertyId: string): Promise<Flat[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("properties", `property-${propertyId}`);
+
+  try {
+    const res = await publicFetch<ApiResponse<Flat[]>>(
+      `/api/flats/properties/${propertyId}/`,
+    );
+    if (!res.ok || !res.body.data) return [];
+    return res.body.data.filter((flat) => flat.status === "AVAILABLE");
+  } catch {
+    return [];
   }
 }
 
