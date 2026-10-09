@@ -190,3 +190,81 @@ export interface Paginated<T> {
   limit: number;
   totalPages: number;
 }
+
+export interface PaymentPage {
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+  data: Payment[];
+}
+
+export interface TenantProfile {
+  id: string;
+  userId: string;
+  status: "ACTIVE" | "INACTIVE";
+  employmentStatus?: string | null;
+  aboutMe?: string | null;
+  contactNumber?: string | null;
+  email: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  user: User;
+}
+
+export interface TenantAnalytics {
+  totalApplications: number;
+  totalApprovedApplications: number;
+  totalRejectedApplications: number;
+  totalActiveLeases: number;
+  totalCompletedPayments: number;
+  totalPendingPayments: number;
+  totalSpent: number;
+}
+
+export interface CheckoutSession {
+  paymentId: string;
+  bkashPaymentId: string;
+  bkashURL: string;
+  invoice: string;
+}
+
+export interface OwnerProfile {
+  id: string;
+  userId: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  contactNumber?: string | null;
+  verificationDocuments?: Array<{ url: string; publicId: string }>;
+  rejectionReason?: string | null;
+  rejectionHistory?: Array<{
+    reason: string;
+    rejectedBy: string;
+    rejectedAt: string;
+  }>;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  averageRating?: number | null;
+  totalReviews?: number;
+  createdAt: string;
+  updatedAt: string;
+  email: string;
+  name: string;
+  user: User;
+}
+
+export interface OwnerAnalytics {
+  totalProperties: number;
+  totalFlats: number;
+  availableFlats: number;
+  totalApplications: number;
+  totalActiveLeases: number;
+  totalEarnings: number;
+  pendingPayments: number;
+}
+
+export interface VariantWithCount extends Variant {
+  property?: Partial<Property>;
+  _count?: { flats: number };
+}

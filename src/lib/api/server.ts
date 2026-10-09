@@ -24,8 +24,9 @@ export async function serverFetch<T = any>(
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
+  const isFormData = options.body instanceof FormData;
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
+  if (!isFormData) headers.set("Content-Type", "application/json");
   if (cookieHeader) headers.set("Cookie", cookieHeader);
 
   const res = await fetch(`${API_URL}${path}`, {
