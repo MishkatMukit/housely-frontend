@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
@@ -92,8 +93,8 @@ export function ApplyDialog({
               id="monthlyIncome"
               name="monthlyIncome"
               type="number"
-              min={1}
-              step={1000}
+              min={0}
+              step="any"
               placeholder="80000"
               className="rounded-none"
             />
