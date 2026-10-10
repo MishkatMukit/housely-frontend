@@ -48,111 +48,135 @@ export async function createPropertyAction(
   _prev: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  const parsed = propertySchema.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description"),
-    address: formData.get("address"),
-    city: formData.get("city"),
-    district: formData.get("district"),
-    postalCode: formData.get("postalCode"),
-    companyName: formData.get("companyName"),
-  });
+  try {
+    const parsed = propertySchema.safeParse({
+      title: formData.get("title"),
+      description: formData.get("description"),
+      address: formData.get("address"),
+      city: formData.get("city"),
+      district: formData.get("district"),
+      postalCode: formData.get("postalCode"),
+      companyName: formData.get("companyName"),
+    });
 
-  if (!parsed.success) {
+    if (!parsed.success) {
+      return {
+        status: "error",
+        message: "Please review the highlighted fields.",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    const images = collectImages(formData);
+    const imageError = validateImages(images);
+    if (imageError) {
+      return {
+        status: "error",
+        message: imageError,
+        fieldErrors: { images: [imageError] },
+      };
+    }
+
+    const payload = new FormData();
+    payload.set("data", JSON.stringify(parsed.data));
+    for (const file of images) payload.append("images", file);
+
+    const result = await createProperty(payload);
+
+    if (!result.ok) {
+      return {
+        status: "error",
+        message: result.body?.message ?? "Property could not be created.",
+      };
+    }
+
+    revalidatePath("/owner/properties");
+    revalidatePath("/properties");
+
+    return {
+      status: "success",
+      message: result.body?.message ?? "Property created successfully.",
+      propertyId: result.body.data?.id,
+    };
+  } catch (error) {
+    console.error("createPropertyAction failed:", error);
     return {
       status: "error",
-      message: "Please review the highlighted fields.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Property could not be created. Please try again.",
     };
   }
-
-  const images = collectImages(formData);
-  const imageError = validateImages(images);
-  if (imageError) {
-    return {
-      status: "error",
-      message: imageError,
-      fieldErrors: { images: [imageError] },
-    };
-  }
-
-  const payload = new FormData();
-  payload.set("data", JSON.stringify(parsed.data));
-  for (const file of images) payload.append("images", file);
-
-  const result = await createProperty(payload);
-
-  if (!result.ok) {
-    return {
-      status: "error",
-      message: result.body?.message ?? "Property could not be created.",
-    };
-  }
-
-  revalidatePath("/owner/properties");
-  revalidatePath("/properties");
-
-  return {
-    status: "success",
-    message: result.body?.message ?? "Property created successfully.",
-    propertyId: result.body.data?.id,
-  };
 }
 
 export async function createVariantAction(
   _prev: FormActionState,
   formData: FormData,
 ): Promise<FormActionState> {
-  const propertyId = String(formData.get("propertyId") ?? "");
-  if (!propertyId) return { status: "error", message: "Missing property." };
+  try {
+    const propertyId = String(formData.get("propertyId") ?? "");
+    if (!propertyId) return { status: "error", message: "Missing property." };
 
-  const parsed = variantSchema.safeParse({
-    name: formData.get("name"),
-    bedrooms: formData.get("bedrooms"),
-    bathrooms: formData.get("bathrooms"),
-    sizeSqft: formData.get("sizeSqft"),
-    rentAmount: formData.get("rentAmount"),
-    advanceAmount: formData.get("advanceAmount"),
-    totalUnits: formData.get("totalUnits"),
-    flatNumberPrefix: formData.get("flatNumberPrefix"),
-  });
+    const parsed = variantSchema.safeParse({
+      name: formData.get("name"),
+      bedrooms: formData.get("bedrooms"),
+      bathrooms: formData.get("bathrooms"),
+      sizeSqft: formData.get("sizeSqft"),
+      rentAmount: formData.get("rentAmount"),
+      advanceAmount: formData.get("advanceAmount"),
+      totalUnits: formData.get("totalUnits"),
+      flatNumberPrefix: formData.get("flatNumberPrefix"),
+    });
 
-  if (!parsed.success) {
+    if (!parsed.success) {
+      return {
+        status: "error",
+        message: "Please review the highlighted fields.",
+        fieldErrors: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    const images = collectImages(formData);
+    const imageError = validateImages(images);
+    if (imageError) {
+      return {
+        status: "error",
+        message: imageError,
+        fieldErrors: { images: [imageError] },
+      };
+    }
+
+    const payload = new FormData();
+    payload.set("data", JSON.stringify(parsed.data));
+    for (const file of images) payload.append("images", file);
+
+    const result = await createVariant(propertyId, payload);
+
+    if (!result.ok) {
+      return {
+        status: "error",
+        message: result.body?.message ?? "Variant could not be created.",
+      };
+    }
+
+    revalidatePath(`/owner/properties/${propertyId}`);
+    revalidatePath("/properties");
+
+    return {
+      status: "success",
+      message: result.body?.message ?? "Variant created successfully.",
+    };
+  } catch (error) {
+    console.error("createVariantAction failed:", error);
     return {
       status: "error",
-      message: "Please review the highlighted fields.",
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Variant could not be created. Please try again.",
     };
   }
-
-  const images = collectImages(formData);
-  const imageError = validateImages(images);
-  if (imageError) {
-    return {
-      status: "error",
-      message: imageError,
-      fieldErrors: { images: [imageError] },
-    };
-  }
-
-  const payload = new FormData();
-  payload.set("data", JSON.stringify(parsed.data));
-  for (const file of images) payload.append("images", file);
-
-  const result = await createVariant(propertyId, payload);
-
-  if (!result.ok) {
-    return {
-      status: "error",
-      message: result.body?.message ?? "Variant could not be created.",
-    };
-  }
-
-  revalidatePath(`/owner/properties/${propertyId}`);
-  return {
-    status: "success",
-    message: result.body?.message ?? "Variant created successfully.",
-  };
 }
 
 export async function updateVariantAction(

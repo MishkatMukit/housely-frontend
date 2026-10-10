@@ -35,37 +35,84 @@ export async function loginAction(
   const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
 
-  const { ok, body, setCookies } = await serverFetch<ApiResponse>(
-    "/api/auth/login",
-    {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    },
-  );
+  try {
+    const { ok, body, setCookies } = await serverFetch<ApiResponse>(
+      "/api/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      },
+    );
 
-  if (!ok) {
-    return { success: false, message: body?.message || "Login failed" };
+    if (!ok) {
+      return { success: false, message: body?.message || "Login failed" };
+    }
+
+    await persistCookies(setCookies);
+    return { success: true, message: body.message, redirectTo: "/" };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to reach the server. Please try again.",
+    };
   }
-
-  await persistCookies(setCookies);
-  return { success: true, message: body.message, redirectTo: "/" };
 }
 
 export async function googleLoginAction(idToken: string): Promise<ActionState> {
-  const { ok, body, setCookies } = await serverFetch<ApiResponse>(
-    "/api/auth/google",
-    {
-      method: "POST",
-      body: JSON.stringify({ idToken }),
-    },
-  );
+  try {
+    const { ok, body, setCookies } = await serverFetch<ApiResponse>(
+      "/api/auth/google",
+      {
+        method: "POST",
+        body: JSON.stringify({ idToken }),
+      },
+    );
 
-  if (!ok) {
-    return { success: false, message: body?.message || "Google login failed" };
+    if (!ok) {
+      return {
+        success: false,
+        message: body?.message || "Google login failed",
+      };
+    }
+
+    if (setCookies && setCookies.length > 0) {
+      await persistCookies(setCookies);
+    }
+
+    const tokenData = body?.data as
+      | { accessToken?: string; refreshToken?: string }
+      | undefined;
+    if (tokenData?.accessToken) {
+      const store = await cookies();
+      store.set("accessToken", tokenData.accessToken, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24,
+      });
+      if (tokenData.refreshToken) {
+        store.set("refreshToken", tokenData.refreshToken, {
+          path: "/",
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          maxAge: 60 * 60 * 24 * 7,
+        });
+      }
+    }
+
+    return { success: true, message: "login successful", redirectTo: "/" };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Google authentication failed",
+    };
   }
-
-  await persistCookies(setCookies);
-  return { success: true, message: "login successful", redirectTo: "/" };
 }
 
 export async function registerAction(
@@ -76,20 +123,33 @@ export async function registerAction(
   const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
 
-  const { ok, body } = await serverFetch<ApiResponse>("/api/auth/register", {
-    method: "POST",
-    body: JSON.stringify({ name, email, password }),
-  });
+  try {
+    const { ok, body } = await serverFetch<ApiResponse>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password }),
+    });
 
-  if (!ok) {
-    return { success: false, message: body?.message || "Registration failed" };
+    if (!ok) {
+      return {
+        success: false,
+        message: body?.message || "Registration failed",
+      };
+    }
+
+    return {
+      success: true,
+      message: body.message,
+      redirectTo: `/verify-email?email=${encodeURIComponent(email)}`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to reach the server. Please try again.",
+    };
   }
-
-  return {
-    success: true,
-    message: body.message,
-    redirectTo: `/verify-email?email=${encodeURIComponent(email)}`,
-  };
 }
 
 export async function verifyEmailAction(
@@ -99,20 +159,33 @@ export async function verifyEmailAction(
   const email = String(formData.get("email") || "");
   const otp = String(formData.get("otp") || "");
 
-  const { ok, body, setCookies } = await serverFetch<ApiResponse>(
-    "/api/auth/verify-email",
-    {
-      method: "POST",
-      body: JSON.stringify({ email, otp }),
-    },
-  );
+  try {
+    const { ok, body, setCookies } = await serverFetch<ApiResponse>(
+      "/api/auth/verify-email",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, otp }),
+      },
+    );
 
-  if (!ok) {
-    return { success: false, message: body?.message || "Verification failed" };
+    if (!ok) {
+      return {
+        success: false,
+        message: body?.message || "Verification failed",
+      };
+    }
+
+    await persistCookies(setCookies);
+    return { success: true, message: body.message, redirectTo: "/" };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to reach the server. Please try again.",
+    };
   }
-
-  await persistCookies(setCookies);
-  return { success: true, message: body.message, redirectTo: "/" };
 }
 
 export async function forgotPasswordAction(
@@ -121,23 +194,33 @@ export async function forgotPasswordAction(
 ): Promise<ActionState> {
   const email = String(formData.get("email") || "");
 
-  const { ok, body } = await serverFetch<ApiResponse>(
-    "/api/auth/forgot-password",
-    {
-      method: "POST",
-      body: JSON.stringify({ email }),
-    },
-  );
+  try {
+    const { ok, body } = await serverFetch<ApiResponse>(
+      "/api/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+    );
 
-  if (!ok) {
-    return { success: false, message: body?.message || "Request failed" };
+    if (!ok) {
+      return { success: false, message: body?.message || "Request failed" };
+    }
+
+    return {
+      success: true,
+      message: body.message,
+      redirectTo: `/reset-password?email=${encodeURIComponent(email)}`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to reach the server. Please try again.",
+    };
   }
-
-  return {
-    success: true,
-    message: body.message,
-    redirectTo: `/reset-password?email=${encodeURIComponent(email)}`,
-  };
 }
 
 export async function resetPasswordAction(
@@ -148,19 +231,29 @@ export async function resetPasswordAction(
   const otp = String(formData.get("otp") || "");
   const newPassword = String(formData.get("newPassword") || "");
 
-  const { ok, body } = await serverFetch<ApiResponse>(
-    "/api/auth/reset-password",
-    {
-      method: "POST",
-      body: JSON.stringify({ email, otp, newPassword }),
-    },
-  );
+  try {
+    const { ok, body } = await serverFetch<ApiResponse>(
+      "/api/auth/reset-password",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, otp, newPassword }),
+      },
+    );
 
-  if (!ok) {
-    return { success: false, message: body?.message || "Reset failed" };
+    if (!ok) {
+      return { success: false, message: body?.message || "Reset failed" };
+    }
+
+    return { success: true, message: body.message, redirectTo: "/login" };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to reach the server. Please try again.",
+    };
   }
-
-  return { success: true, message: body.message, redirectTo: "/login" };
 }
 
 export async function logoutAction(): Promise<void> {

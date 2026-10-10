@@ -5,8 +5,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 const PROD_API_URL = "https://housely-backend-seven.vercel.app";
 
-const PUBLIC_API_BASES =
-  process.env.NODE_ENV === "production" ? [API_URL, PROD_API_URL] : [API_URL];
+const PUBLIC_API_BASES = Array.from(
+  new Set([API_URL, PROD_API_URL].filter(Boolean)),
+);
 
 export interface ServerFetchResult<T = unknown> {
   ok: boolean;
@@ -38,6 +39,9 @@ export async function serverFetch<T = unknown>(
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
+  const defaultTimeout = isFormData ? 60000 : 15000;
+  const timeoutSignal = options.signal ?? AbortSignal.timeout(defaultTimeout);
+
   let lastError: unknown;
   for (const base of PUBLIC_API_BASES) {
     try {
@@ -45,7 +49,7 @@ export async function serverFetch<T = unknown>(
         ...options,
         headers,
         cache: "no-store",
-        signal: options.signal ?? AbortSignal.timeout(6000),
+        signal: timeoutSignal,
       });
 
       const contentType = res.headers.get("content-type") || "";
@@ -63,6 +67,7 @@ export async function serverFetch<T = unknown>(
     } catch (error) {
       unstable_rethrow(error);
       lastError = error;
+      if (isFormData) break;
     }
   }
 

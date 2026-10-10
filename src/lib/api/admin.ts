@@ -38,7 +38,7 @@ export interface AdminTenantFilters {
 export interface AdminOwnerFilters {
   page?: number;
   limit?: number;
-  status?: "PENDING" | "APPROVED" | "REJECTED";
+  status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL";
   search?: string;
 }
 

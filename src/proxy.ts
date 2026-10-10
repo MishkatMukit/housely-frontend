@@ -30,6 +30,11 @@ function decodeToken(token: string): {
   }
 }
 
+function applyCoop(res: NextResponse): NextResponse {
+  res.headers.set("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  return res;
+}
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const tokenCookie = req.cookies.get("accessToken")?.value;
@@ -47,11 +52,11 @@ export function proxy(req: NextRequest) {
       loginUrl.searchParams.set("redirect", pathname);
       const res = NextResponse.redirect(loginUrl);
       res.cookies.delete("accessToken");
-      return res;
+      return applyCoop(res);
     }
     const res = NextResponse.next();
     res.cookies.delete("accessToken");
-    return res;
+    return applyCoop(res);
   }
 
   if (token && AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
@@ -61,7 +66,7 @@ export function proxy(req: NextRequest) {
         : role === "OWNER"
           ? "/owner"
           : "/tenant";
-    return NextResponse.redirect(new URL(dest, req.url));
+    return applyCoop(NextResponse.redirect(new URL(dest, req.url)));
   }
 
   const isProtected = PROTECTED_PREFIXES.some((prefix) =>
@@ -70,16 +75,16 @@ export function proxy(req: NextRequest) {
   if (isProtected && !token) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    return applyCoop(NextResponse.redirect(loginUrl));
   }
 
   for (const [prefix, roles] of Object.entries(ROLE_ROUTES)) {
     if (pathname.startsWith(prefix) && token && role && !roles.includes(role)) {
-      return NextResponse.redirect(new URL("/", req.url));
+      return applyCoop(NextResponse.redirect(new URL("/", req.url)));
     }
   }
 
-  return NextResponse.next();
+  return applyCoop(NextResponse.next());
 }
 
 export const config = {

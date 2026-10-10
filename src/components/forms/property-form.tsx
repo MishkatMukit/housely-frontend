@@ -38,7 +38,11 @@ export function PropertyForm() {
   const fieldErrors = state.fieldErrors ?? {};
 
   return (
-    <form action={formAction} className="grid gap-6">
+    <form
+      action={formAction}
+      className="grid gap-6"
+      encType="multipart/form-data"
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2 sm:col-span-2">
           <Label htmlFor="title">Title</Label>

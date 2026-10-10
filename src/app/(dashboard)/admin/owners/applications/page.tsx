@@ -11,12 +11,12 @@ type SearchParams = Promise<{ page?: string; status?: string }>;
 
 const FILTERS: {
   label: string;
-  value?: "PENDING" | "APPROVED" | "REJECTED";
+  value?: "PENDING" | "APPROVED" | "REJECTED" | "ALL";
 }[] = [
   { label: "Pending", value: "PENDING" },
   { label: "Approved", value: "APPROVED" },
   { label: "Rejected", value: "REJECTED" },
-  { label: "All" },
+  { label: "All", value: "ALL" },
 ];
 
 function formatDate(value: string) {
@@ -36,7 +36,7 @@ export default async function AdminOwnerApplicationsPage({
   const page = Math.max(1, Number(params.page) || 1);
   const known = FILTERS.some((item) => item.value === params.status);
   const status = known
-    ? (params.status as "PENDING" | "APPROVED" | "REJECTED" | undefined)
+    ? (params.status as "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined)
     : "PENDING";
 
   const result = await getAdminOwnerApplications({ page, status });
