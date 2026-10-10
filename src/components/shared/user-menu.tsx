@@ -3,8 +3,6 @@
 import { LayoutDashboard, LogOut, User as UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { logoutAction } from "@/app/(auth)/actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,26 +37,14 @@ export function UserMenu({ user }: { user: User }) {
   const setAuth = useAuthStore((s) => s.setAuth);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     setAuth(user, null);
   }, [user, setAuth]);
 
-  const handleLogout = async () => {
-    setPending(true);
-    try {
-      await logoutAction();
-      clearAuth();
-      setConfirmOpen(false);
-      toast.success("Logged out");
-      router.push("/login");
-      router.refresh();
-    } catch {
-      toast.error("Could not log out. Please try again.");
-    } finally {
-      setPending(false);
-    }
+  const handleLogout = () => {
+    clearAuth();
+    window.location.assign("/api/logout");
   };
 
   const initials = user.name?.slice(0, 2).toUpperCase() || "U";
@@ -122,13 +108,9 @@ export function UserMenu({ user }: { user: User }) {
             <DialogClose render={<Button variant="outline" />}>
               Stay signed in
             </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleLogout}
-              disabled={pending}
-            >
+            <Button variant="destructive" onClick={handleLogout}>
               <LogOut className="mr-1.5 h-4 w-4" />
-              {pending ? "Logging out…" : "Log out"}
+              Log out
             </Button>
           </DialogFooter>
         </DialogContent>

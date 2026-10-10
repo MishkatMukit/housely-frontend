@@ -1,4 +1,4 @@
-export type ApiResponse<T = any> = {
+export type ApiResponse<T = unknown> = {
   success: boolean;
   statusCode: number;
   message: string;
@@ -130,7 +130,7 @@ export interface Application {
   employment?: string | null;
   message?: string | null;
   status: ApplicationStatus;
-  documents?: any | null;
+  documents?: unknown | null;
   rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -267,4 +267,50 @@ export interface OwnerAnalytics {
 export interface VariantWithCount extends Variant {
   property?: Partial<Property>;
   _count?: { flats: number };
+}
+
+export interface AdminAnalytics {
+  totalOwners: number;
+  totalPendingOwnerApplications: number;
+  totalApprovedOwners: number;
+  totalRejectedOwners: number;
+  totalTenants: number;
+  totalProperties: number;
+  totalFlats: number;
+  availableFlats: number;
+  totalActiveLeases: number;
+  totalApplications: number;
+  totalRevenue: number;
+}
+
+export interface AdminOwner extends Owner {
+  user: User;
+}
+
+export interface OwnerApplication {
+  id: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  contactNumber?: string | null;
+  verificationDocuments?: Array<{ url: string; publicId: string }>;
+  rejectionReason?: string | null;
+  rejectionHistory?: Array<{
+    reason: string;
+    rejectedBy: string;
+    rejectedAt: string;
+  }>;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: Pick<
+    User,
+    | "id"
+    | "name"
+    | "email"
+    | "emailVerified"
+    | "address"
+    | "nationalIdNumber"
+    | "imageUrl"
+    | "createdAt"
+  >;
 }

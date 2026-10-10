@@ -3,8 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { authApi } from "@/lib/api/auth";
-import { useAuthStore } from "@/store/auth-store";
+import { googleLoginAction } from "@/app/(auth)/actions";
 
 declare global {
   interface Window {
@@ -27,26 +26,26 @@ declare global {
 
 export function GoogleLoginButton() {
   const router = useRouter();
-  const setAuth = useAuthStore((s) => s.setAuth);
   const ref = useRef<HTMLDivElement>(null);
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   const handleCredential = useCallback(
     async (idToken: string) => {
       try {
-        const res = await authApi.google(idToken);
-        const user = await authApi.me();
-        setAuth(user.data ?? null, res.data?.accessToken ?? null);
-        toast.success("Logged in with Google");
-        router.push("/");
+        const state = await googleLoginAction(idToken);
+        if (!state.success) {
+          toast.error(state.message || "Google login failed");
+          return;
+        }
+        toast.success(state.message || "Logged in with Google");
+        router.push(state.redirectTo || "/");
         router.refresh();
       } catch (error: unknown) {
-        const message = (error as { data?: { message?: string } })?.data
-          ?.message;
+        const message = (error as { message?: string })?.message;
         toast.error(message || "Google login failed");
       }
     },
-    [router, setAuth],
+    [router],
   );
 
   useEffect(() => {

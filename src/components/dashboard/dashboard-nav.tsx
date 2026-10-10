@@ -27,6 +27,32 @@ function profileItem(index: string): NavItem {
   return { href: "/profile", label: "Profile", index, icon: UserRound };
 }
 
+const ADMIN_ITEMS: NavItem[] = [
+  {
+    href: "/admin",
+    label: "Overview",
+    index: "01",
+    icon: LayoutDashboard,
+    exact: true,
+  },
+  { href: "/admin/users", label: "Users", index: "02", icon: Users },
+  {
+    href: "/admin/owners",
+    label: "Owners",
+    index: "03",
+    icon: Building2,
+    exact: true,
+  },
+  {
+    href: "/admin/owners/applications",
+    label: "Applications",
+    index: "04",
+    icon: FileText,
+  },
+  { href: "/admin/tenants", label: "Tenants", index: "05", icon: UserRound },
+  profileItem("06"),
+];
+
 const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   TENANT: [
     {
@@ -81,26 +107,8 @@ const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
     },
     profileItem("07"),
   ],
-  ADMIN: [
-    {
-      href: "/admin",
-      label: "Overview",
-      index: "01",
-      icon: LayoutDashboard,
-      exact: true,
-    },
-    profileItem("02"),
-  ],
-  SUPERADMIN: [
-    {
-      href: "/admin",
-      label: "Overview",
-      index: "01",
-      icon: LayoutDashboard,
-      exact: true,
-    },
-    profileItem("02"),
-  ],
+  ADMIN: ADMIN_ITEMS,
+  SUPERADMIN: ADMIN_ITEMS,
 };
 
 export function DashboardNav({ role }: { role: UserRole | null }) {

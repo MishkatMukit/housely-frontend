@@ -51,6 +51,23 @@ export async function loginAction(
   return { success: true, message: body.message, redirectTo: "/" };
 }
 
+export async function googleLoginAction(idToken: string): Promise<ActionState> {
+  const { ok, body, setCookies } = await serverFetch<ApiResponse>(
+    "/api/auth/google",
+    {
+      method: "POST",
+      body: JSON.stringify({ idToken }),
+    },
+  );
+
+  if (!ok) {
+    return { success: false, message: body?.message || "Google login failed" };
+  }
+
+  await persistCookies(setCookies);
+  return { success: true, message: "login successful", redirectTo: "/" };
+}
+
 export async function registerAction(
   _prev: ActionState | undefined,
   formData: FormData,
@@ -150,4 +167,20 @@ export async function logoutAction(): Promise<void> {
   const store = await cookies();
   store.delete("accessToken");
   store.delete("refreshToken");
+}
+
+export async function resendOtpAction(
+  email: string,
+  type: "register" | "password",
+): Promise<ActionState> {
+  const { ok, body } = await serverFetch<ApiResponse>("/api/auth/resend-otp", {
+    method: "POST",
+    body: JSON.stringify({ email, type }),
+  });
+
+  if (!ok) {
+    return { success: false, message: body?.message || "Could not resend OTP" };
+  }
+
+  return { success: true, message: body.message };
 }

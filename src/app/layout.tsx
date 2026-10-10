@@ -7,6 +7,7 @@ const display = Big_Shoulders({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+  adjustFontFallback: false,
 });
 
 const body = Spectral({

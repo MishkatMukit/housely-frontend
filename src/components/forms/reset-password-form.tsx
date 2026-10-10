@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { type ActionState, resetPasswordAction } from "@/app/(auth)/actions";
+import { ResendOtpButton } from "@/components/forms/resend-otp-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ export function ResetPasswordForm({ email }: { email?: string }) {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Resetting..." : "Reset password"}
       </Button>
+      <ResendOtpButton type="password" defaultEmail={email} />
     </form>
   );
 }

@@ -15,20 +15,44 @@ const ROLE_ROUTES: Record<string, string[]> = {
 };
 const PROTECTED_PREFIXES = ["/admin", "/owner", "/tenant", "/profile"];
 
-function decodeRole(token: string): string | null {
+function decodeToken(token: string): {
+  role: string | null;
+  isExpired: boolean;
+} {
   try {
     const payload = token.split(".")[1];
+    if (!payload) return { role: null, isExpired: true };
     const json = JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
-    return json.role ?? null;
+    const isExpired = Boolean(json.exp && Date.now() >= json.exp * 1000);
+    return { role: json.role ?? null, isExpired };
   } catch {
-    return null;
+    return { role: null, isExpired: true };
   }
 }
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const token = req.cookies.get("accessToken")?.value;
-  const role = token ? decodeRole(token) : null;
+  const tokenCookie = req.cookies.get("accessToken")?.value;
+  const { role, isExpired } = tokenCookie
+    ? decodeToken(tokenCookie)
+    : { role: null, isExpired: false };
+  const token = tokenCookie && !isExpired ? tokenCookie : null;
+
+  if (tokenCookie && isExpired) {
+    const isProtected = PROTECTED_PREFIXES.some((prefix) =>
+      pathname.startsWith(prefix),
+    );
+    if (isProtected) {
+      const loginUrl = new URL("/login", req.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      const res = NextResponse.redirect(loginUrl);
+      res.cookies.delete("accessToken");
+      return res;
+    }
+    const res = NextResponse.next();
+    res.cookies.delete("accessToken");
+    return res;
+  }
 
   if (token && AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
     const dest =
