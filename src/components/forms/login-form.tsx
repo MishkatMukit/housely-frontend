@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
@@ -46,6 +47,12 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Signing in..." : "Sign in"}
       </Button>
+      <Link
+        href="/forgot-password"
+        className="text-center text-sm font-medium underline underline-offset-4"
+      >
+        Forgot password?
+      </Link>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
