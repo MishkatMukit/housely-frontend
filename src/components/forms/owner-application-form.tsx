@@ -4,12 +4,14 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   applyOwnerAction,
-  initialOwnerApplyState,
+  type OwnerApplyState,
 } from "@/app/(dashboard)/profile/become-owner/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+const initialState: OwnerApplyState = { status: "idle", message: "" };
 
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
@@ -19,7 +21,7 @@ function FieldError({ errors }: { errors?: string[] }) {
 export function OwnerApplicationForm() {
   const [state, formAction, pending] = useActionState(
     applyOwnerAction,
-    initialOwnerApplyState,
+    initialState,
   );
 
   useEffect(() => {

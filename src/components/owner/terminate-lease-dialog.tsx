@@ -4,7 +4,7 @@ import { Ban } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  initialLeaseState,
+  type LeaseActionState,
   terminateLeaseAction,
 } from "@/app/(dashboard)/owner/leases/actions";
 import { Button } from "@/components/ui/button";
@@ -21,11 +21,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+const initialState: LeaseActionState = { status: "idle", message: "" };
+
 export function TerminateLeaseDialog({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     terminateLeaseAction,
-    initialLeaseState,
+    initialState,
   );
 
   useEffect(() => {

@@ -3,13 +3,15 @@
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import {
-  initialProfileState,
+  type ProfileActionState,
   updateOwnerProfileAction,
 } from "@/app/(dashboard)/profile/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { OwnerProfile } from "@/types/api";
+
+const initialState: ProfileActionState = { status: "idle", message: "" };
 
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
@@ -19,7 +21,7 @@ function FieldError({ errors }: { errors?: string[] }) {
 export function OwnerProfileForm({ profile }: { profile: OwnerProfile }) {
   const [state, formAction, pending] = useActionState(
     updateOwnerProfileAction,
-    initialProfileState,
+    initialState,
   );
   const user = profile.user;
 

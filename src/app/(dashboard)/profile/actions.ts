@@ -12,11 +12,6 @@ export interface ProfileActionState {
   fieldErrors?: Record<string, string[] | undefined>;
 }
 
-export const initialProfileState: ProfileActionState = {
-  status: "idle",
-  message: "",
-};
-
 export async function updateProfileAction(
   _prev: ProfileActionState,
   formData: FormData,

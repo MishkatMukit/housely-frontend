@@ -8,11 +8,6 @@ export interface LeaseActionState {
   message: string;
 }
 
-export const initialLeaseState: LeaseActionState = {
-  status: "idle",
-  message: "",
-};
-
 export async function terminateLeaseAction(
   _prev: LeaseActionState,
   formData: FormData,

@@ -8,7 +8,7 @@ import {
   createVariantAction,
   deleteFlatAction,
   deleteVariantAction,
-  initialFormState,
+  type FormActionState,
   updateFlatAction,
   updateVariantAction,
 } from "@/app/(dashboard)/owner/properties/actions";
@@ -44,11 +44,13 @@ function FieldError({ errors }: { errors?: string[] }) {
 const actionButton =
   "rounded-none bg-tolet px-4 text-primary-foreground hover:bg-tolet/90";
 
+const initialState: FormActionState = { status: "idle", message: "" };
+
 function CreateVariantDialog({ propertyId }: { propertyId: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     createVariantAction,
-    initialFormState,
+    initialState,
   );
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -216,7 +218,7 @@ function EditVariantDialog({
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateVariantAction,
-    initialFormState,
+    initialState,
   );
 
   useEffect(() => {
@@ -349,7 +351,7 @@ function AddFlatsDialog({
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     addFlatsAction,
-    initialFormState,
+    initialState,
   );
 
   useEffect(() => {
@@ -437,7 +439,7 @@ function EditFlatDialog({
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateFlatAction,
-    initialFormState,
+    initialState,
   );
 
   useEffect(() => {

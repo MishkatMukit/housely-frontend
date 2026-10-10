@@ -10,11 +10,6 @@ export interface OwnerApplyState {
   fieldErrors?: Record<string, string[] | undefined>;
 }
 
-export const initialOwnerApplyState: OwnerApplyState = {
-  status: "idle",
-  message: "",
-};
-
 const ALLOWED_TYPES = [
   "image/jpeg",
   "image/png",

@@ -4,8 +4,8 @@ import { Check, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
+  type AdminActionState,
   approveOwnerAction,
-  initialAdminActionState,
   rejectOwnerAction,
 } from "@/app/(dashboard)/admin/actions";
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,13 @@ import { Textarea } from "@/components/ui/textarea";
 const actionButton =
   "rounded-none bg-tolet px-4 text-primary-foreground hover:bg-tolet/90";
 
+const initialState: AdminActionState = { status: "idle", message: "" };
+
 function ApproveDialog({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     approveOwnerAction,
-    initialAdminActionState,
+    initialState,
   );
 
   useEffect(() => {
@@ -84,7 +86,7 @@ function RejectDialog({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     rejectOwnerAction,
-    initialAdminActionState,
+    initialState,
   );
 
   useEffect(() => {

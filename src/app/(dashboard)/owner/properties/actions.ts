@@ -28,11 +28,6 @@ export interface FormActionState {
   propertyId?: string;
 }
 
-export const initialFormState: FormActionState = {
-  status: "idle",
-  message: "",
-};
-
 function collectImages(formData: FormData, field = "images"): File[] {
   return formData
     .getAll(field)

@@ -8,8 +8,6 @@ export interface ReviewState {
   message: string;
 }
 
-export const initialReviewState: ReviewState = { status: "idle", message: "" };
-
 export async function approveApplicationAction(
   _prev: ReviewState,
   formData: FormData,

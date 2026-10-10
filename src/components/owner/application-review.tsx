@@ -3,9 +3,9 @@
 import { Check, X } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
+import type { ReviewState } from "@/app/(dashboard)/owner/applications/actions";
 import {
   approveApplicationAction,
-  initialReviewState,
   rejectApplicationAction,
 } from "@/app/(dashboard)/owner/applications/actions";
 import { Button } from "@/components/ui/button";
@@ -25,11 +25,13 @@ import { Textarea } from "@/components/ui/textarea";
 const actionButton =
   "rounded-none bg-tolet px-4 text-primary-foreground hover:bg-tolet/90";
 
+const initialState: ReviewState = { status: "idle", message: "" };
+
 function ApproveDialog({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     approveApplicationAction,
-    initialReviewState,
+    initialState,
   );
 
   useEffect(() => {
@@ -83,7 +85,7 @@ function RejectDialog({ id }: { id: string }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     rejectApplicationAction,
-    initialReviewState,
+    initialState,
   );
 
   useEffect(() => {

@@ -13,7 +13,6 @@ import {
   type AdminActionState,
   blockUserAction,
   deleteUserAction,
-  initialAdminActionState,
   makeAdminAction,
   unblockUserAction,
 } from "@/app/(dashboard)/admin/actions";
@@ -29,6 +28,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { UserRole, UserStatus } from "@/types/api";
+
+const initialState: AdminActionState = { status: "idle", message: "" };
 
 type ActionFn = (
   prev: AdminActionState,
@@ -59,10 +60,7 @@ function ActionDialog({
   triggerClassName: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(
-    action,
-    initialAdminActionState,
-  );
+  const [state, formAction, pending] = useActionState(action, initialState);
 
   useEffect(() => {
     if (state.status === "success") {

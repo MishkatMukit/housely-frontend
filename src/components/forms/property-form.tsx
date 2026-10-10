@@ -5,12 +5,14 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   createPropertyAction,
-  initialFormState,
+  type FormActionState,
 } from "@/app/(dashboard)/owner/properties/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+const initialState: FormActionState = { status: "idle", message: "" };
 
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
@@ -21,7 +23,7 @@ export function PropertyForm() {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
     createPropertyAction,
-    initialFormState,
+    initialState,
   );
 
   useEffect(() => {

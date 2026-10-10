@@ -15,11 +15,6 @@ export interface AdminActionState {
   message: string;
 }
 
-export const initialAdminActionState: AdminActionState = {
-  status: "idle",
-  message: "",
-};
-
 function revalidateAdmin() {
   revalidatePath("/admin");
   revalidatePath("/admin/users");

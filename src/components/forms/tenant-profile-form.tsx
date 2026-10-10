@@ -3,7 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import {
-  initialProfileState,
+  type ProfileActionState,
   updateProfileAction,
 } from "@/app/(dashboard)/profile/actions";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { TenantProfile } from "@/types/api";
+
+const initialState: ProfileActionState = { status: "idle", message: "" };
 
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors?.length) return null;
@@ -20,7 +22,7 @@ function FieldError({ errors }: { errors?: string[] }) {
 export function TenantProfileForm({ profile }: { profile: TenantProfile }) {
   const [state, formAction, pending] = useActionState(
     updateProfileAction,
-    initialProfileState,
+    initialState,
   );
   const locked = profile.status === "INACTIVE";
 
